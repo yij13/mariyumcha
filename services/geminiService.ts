@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type, Modality } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { Joke, Language } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -39,38 +39,6 @@ Language: Manglish (EN) or Malaysian-Mandarin (ZH).`,
     return JSON.parse(jsonStr) as Joke;
   } catch (error) {
     console.error("Error fetching joke:", error);
-    throw error;
-  }
-};
-
-export const speakText = async (text: string): Promise<Uint8Array> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Say this naturally like a Malaysian friend: ${text}` }] }],
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Zephyr' },
-          },
-        },
-      },
-    });
-
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!base64Audio) throw new Error("No audio data returned");
-    
-    // Manual base64 decode to bytes
-    const binaryString = atob(base64Audio);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes;
-  } catch (error) {
-    console.error("TTS Error:", error);
     throw error;
   }
 };

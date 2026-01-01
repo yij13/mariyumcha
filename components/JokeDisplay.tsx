@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Joke, AppState, Language } from '../types';
-import { speakText } from '../services/geminiService';
 
 interface JokeDisplayProps {
   joke: Joke | null;
@@ -20,7 +19,6 @@ const translations = {
     copy: "Copy",
     copied: "Copied!",
     share: "Share",
-    speak: "Listen",
   },
   [Language.CHINESE]: {
     questionLabel: "問題：",
@@ -30,40 +28,12 @@ const translations = {
     copy: "複製",
     copied: "已複製！",
     share: "分享",
-    speak: "朗讀",
   }
 };
 
 const JokeDisplay: React.FC<JokeDisplayProps> = ({ joke, state, showPunchline, onReveal, language }) => {
   const t = translations[language];
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-
-  const handleSpeak = async () => {
-    if (!joke || isSpeaking) return;
-    setIsSpeaking(true);
-    try {
-      const textToSpeak = showPunchline ? `${joke.setup}... ${joke.punchline}` : joke.setup;
-      const audioData = await speakText(textToSpeak);
-      
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      const dataInt16 = new Int16Array(audioData.buffer);
-      const buffer = audioCtx.createBuffer(1, dataInt16.length, 24000);
-      const channelData = buffer.getChannelData(0);
-      for (let i = 0; i < dataInt16.length; i++) {
-        channelData[i] = dataInt16[i] / 32768.0;
-      }
-      
-      const source = audioCtx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioCtx.destination);
-      source.onended = () => setIsSpeaking(false);
-      source.start();
-    } catch (err) {
-      console.error(err);
-      setIsSpeaking(false);
-    }
-  };
 
   const handleCopy = () => {
     if (!joke) return;
@@ -118,7 +88,7 @@ const JokeDisplay: React.FC<JokeDisplayProps> = ({ joke, state, showPunchline, o
         <p className="text-indigo-400/60 font-black uppercase tracking-[0.3em] text-[10px]">
           {t.questionLabel}
         </p>
-        <h2 className="text-2xl md:text-4xl font-extrabold text-white leading-tight drop-shadow-xl">
+        <h2 className="text-xl md:text-2xl font-bold text-white leading-relaxed drop-shadow-xl">
           {joke.setup}
         </h2>
       </div>
@@ -126,14 +96,6 @@ const JokeDisplay: React.FC<JokeDisplayProps> = ({ joke, state, showPunchline, o
       <div className="flex justify-center items-center gap-4 py-2">
         <div className="h-px flex-1 bg-gradient-to-r from-transparent to-white/10"></div>
         <div className="flex gap-2">
-          <button 
-            onClick={handleSpeak}
-            disabled={isSpeaking}
-            className={`p-3 rounded-xl glass hover:bg-white/10 transition-all ${isSpeaking ? 'animate-pulse text-pink-400' : 'text-white/60 hover:text-white'}`}
-            title={t.speak}
-          >
-            {isSpeaking ? '🔊' : '🔈'}
-          </button>
           <button 
             onClick={handleCopy}
             className="p-3 rounded-xl glass hover:bg-white/10 transition-all text-white/60 hover:text-white"
@@ -160,14 +122,14 @@ const JokeDisplay: React.FC<JokeDisplayProps> = ({ joke, state, showPunchline, o
             <p className="text-pink-400/60 font-black uppercase tracking-[0.3em] text-[10px]">
               {t.answerLabel}
             </p>
-            <p className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white via-pink-200 to-indigo-400 drop-shadow-sm">
+            <p className="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-white via-pink-200 to-indigo-400 drop-shadow-sm">
               {joke.punchline}
             </p>
           </div>
           <div className="flex justify-center gap-6 pt-4">
-            <span className="text-5xl animate-bounce drop-shadow-2xl">😂</span>
-            <span className="text-5xl animate-bounce [animation-delay:150ms] drop-shadow-2xl">🤣</span>
-            <span className="text-5xl animate-bounce [animation-delay:300ms] drop-shadow-2xl">💀</span>
+            <span className="text-4xl animate-bounce drop-shadow-2xl">😂</span>
+            <span className="text-4xl animate-bounce [animation-delay:150ms] drop-shadow-2xl">🤣</span>
+            <span className="text-4xl animate-bounce [animation-delay:300ms] drop-shadow-2xl">💀</span>
           </div>
         </div>
       ) : (
